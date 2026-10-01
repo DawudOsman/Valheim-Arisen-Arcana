@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.PlayerLoop;
 using BepInEx;
+using Jotunn.Entities;
+using Jotunn;
+using Jotunn.Managers;
 namespace ValheimArisenArcana
 {
    public class MagicStaff : MonoBehaviour
@@ -67,7 +70,7 @@ namespace ValheimArisenArcana
     }
     public void initSpells(SpellData spellData, int idx)
         {
-            GameObject prefab = ZNetScene.instance.GetPrefab(spellData.SpellPrefab);
+            GameObject prefab =  PrefabManager.Instance.GetPrefab(spellData.SpellPrefab);
             if (prefab == null)
             {
               return;
@@ -78,9 +81,45 @@ namespace ValheimArisenArcana
             BindSpell(action,newSpell);
         }
     
-    public void castSpell()
+    public void castSpell(SpellAction action, Player player)
         {
-            // implement function to cast spell
+            Spells currSpell = GetSpell(action);
+            // implement function to cast
+                    GameObject prefab =
+            ZNetScene.instance.GetPrefab(currSpell.SpellData.SpellPrefab);
+            
+            if(prefab == null)
+            {
+                return;
+            }
+            ;
+            // Spawn slightly in front of and above the player
+            Vector3 spawnPosition =
+                player.transform.position
+                + GameCamera.instance.transform.forward* 1.5f
+                + Vector3.up * 1.2f;
+
+            // Make the projectile face where the player is facing
+            Quaternion rotation =
+                Quaternion.LookRotation(GameCamera.instance.transform.forward);
+
+            Vector3 velocity =
+            GameCamera.instance.transform.forward * 30f;
+            GameObject projectile = Instantiate(prefab,spawnPosition,rotation);
+            Projectile projectileComponent = projectile.GetComponent<Projectile>();
+            if(projectileComponent != null)
+            {
+                projectileComponent.Setup(
+                    player,
+                    velocity,
+                    -1f,
+                    currSpell.SpellData.HitData,
+                    null,
+                    null
+                );
+            }
+
+
         }
 
     } 
